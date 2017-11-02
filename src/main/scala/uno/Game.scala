@@ -1,5 +1,6 @@
 package uno
 
+import scala.language.implicitConversions
 import akka.actor.ActorSystem
 import uno.Players.twoPlayers
 import uno.event.EventSourceAggregate
