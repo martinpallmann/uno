@@ -4,7 +4,7 @@ import scala.language.implicitConversions
 import akka.actor.ActorSystem
 import uno.Players.twoPlayers
 import uno.event.EventSourceAggregate
-import uno.game.{Command, CreateGame, Error, Event, GameCreated, GameJoined, GameStarted, Idle, JoinGame, Playing, StartGame, State, UnknownCommandError, WaitingForPlayers, WaitingToStart}
+import uno.game._
 
 class Game(override val persistenceId: String)(implicit system: ActorSystem)
     extends EventSourceAggregate[State, Command, Event, Error] {
