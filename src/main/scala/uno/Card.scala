@@ -17,7 +17,6 @@ object Card {
     case object Green extends Color
     case object Blue extends Color
     case object Yellow extends Color
-
   }
 
   sealed trait Digit

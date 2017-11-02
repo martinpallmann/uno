@@ -7,9 +7,9 @@ package object uno {
   implicit class EnhancedCmd(command: Command)(implicit startState: State) {
     def ~~> (xs: Event*): Either[Error, List[Event]] = {
       val state = xs.foldLeft(startState) {
-        (acc, elem) ⇒ GameLogic.evolve(acc, elem)
+        (acc, elem) ⇒ Game.evolve(acc, elem)
       }
-      GameLogic.decide(state, command)
+      Game.decide(state, command)
     }
   }
 }

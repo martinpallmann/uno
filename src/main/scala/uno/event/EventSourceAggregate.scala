@@ -14,9 +14,13 @@ abstract class EventSourceAggregate[STATE, COMMAND, EVENT <: AnyRef, ERROR]
 
   protected val persistenceId: String
 
-  protected val eventSource: EventSource[STATE, COMMAND, EVENT, ERROR]
+  protected val startState: STATE
 
-  private lazy val actor = EventSourceActor(persistenceId, eventSource)
+  protected val decide: (STATE, COMMAND) ⇒ Either[ERROR, List[EVENT]]
+
+  protected val evolve: (STATE, EVENT) ⇒ STATE
+
+  private lazy val actor = EventSourceActor(persistenceId, startState, decide, evolve)
 
   def send(command: COMMAND): Future[Either[ERROR, List[EVENT]]] =
     (actor ? command).mapTo[Either[ERROR, List[EVENT]]]
