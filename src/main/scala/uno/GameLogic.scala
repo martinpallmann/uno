@@ -1,5 +1,7 @@
 package uno
 
+import scala.language.implicitConversions
+import uno.Players.twoPlayers
 import uno.game._
 
 object GameLogic {
@@ -9,33 +11,43 @@ object GameLogic {
   val decide: (State, Command) ⇒ Either[Error, List[Event]] = {
 
     case (Idle, CreateGame(p)) ⇒
-      Right(List(GameCreated(), GameJoined(p)))
+      ok(GameCreated(), GameJoined(p))
 
     case (WaitingForPlayers(_), JoinGame(p)) ⇒
-      Right(List(GameJoined(p)))
+      ok(GameJoined(p))
+
+    case (WaitingToStart(_), JoinGame(p)) ⇒
+      ok(GameJoined(p))
 
     case (WaitingToStart(_), StartGame()) ⇒
-      Right(List(GameStarted()))
+      ok(GameStarted())
 
     case (state, command) ⇒
-      Left(UnknownCommandError(state, command))
+      UnknownCommandError(state, command)
   }
 
   val evolve: (State, Event) => State = {
 
     case (Idle, GameCreated()) ⇒
-      WaitingForPlayers(Nil)
+      WaitingForPlayers(Players())
 
-    case (WaitingForPlayers(p1 :: p2 :: Nil), GameJoined(p)) ⇒
-      WaitingToStart(p :: p1 :: p2 :: Nil)
+    case (WaitingForPlayers(ps @ twoPlayers()), GameJoined(p)) ⇒
+      WaitingToStart(ps + p)
 
     case (WaitingForPlayers(ps), GameJoined(p)) ⇒
-      WaitingForPlayers(p :: ps)
+      WaitingForPlayers(ps + p)
 
-    case (WaitingToStart(p), GameStarted()) ⇒
-      Playing()
+    case (WaitingToStart(ps), GameJoined(p)) ⇒
+      Playing(ps + p)
+
+    case (WaitingToStart(ps), GameStarted()) ⇒
+      Playing(ps)
 
     case (state, _) ⇒
       state
   }
+
+  private def ok(events: Event*): Either[Error, List[Event]] = Right(events.toList)
+
+  private implicit def toEither(e: Error): Either[Error, List[Event]] = Left(e)
 }

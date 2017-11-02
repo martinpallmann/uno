@@ -1,3 +1,3 @@
 package uno
 
-case class Player()
+case class Player(name: String)

@@ -1,6 +1,7 @@
 package uno
 package game
 
+import java.io.NotSerializableException
 import akka.serialization.SerializerWithStringManifest
 
 sealed trait Event
@@ -14,23 +15,24 @@ class EventSerializer extends SerializerWithStringManifest {
   override def identifier = 1234567
 
   override def manifest(o: AnyRef): String = o match {
-    case _: GameCreated ⇒ "game_created"
-    case _: GameJoined  ⇒ "game_joined"
-    case _: GameStarted ⇒ "game_started"
-    case _: CardPlayed  ⇒ "card_played"
+    case _: GameCreated ⇒ "game_created_v1"
+    case _: GameJoined  ⇒ "game_joined_v1"
+    case _: GameStarted ⇒ "game_started_v1"
+    case _: CardPlayed  ⇒ "card_played_v1"
   }
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
     case _: GameCreated ⇒ "".getBytes("UTF-8")
-    case _: GameJoined  ⇒ "".getBytes("UTF-8")
+    case GameJoined(p)  ⇒ p.name.getBytes("UTF-8")
     case _: GameStarted ⇒ "".getBytes("UTF-8")
     case _: CardPlayed  ⇒ "".getBytes("UTF-8")
   }
 
   override def fromBinary(bytes: Array[Byte], manifest: String): Event = manifest match {
-    case "game_created" ⇒ GameCreated()
-    case "game_joined"  ⇒ GameJoined(Player())
-    case "game_started" ⇒ GameStarted()
-    case "card_played"  ⇒ CardPlayed()
+    case "game_created_v1" ⇒ GameCreated()
+    case "game_joined_v1"  ⇒ GameJoined(Player(new String(bytes, "UTF-8")))
+    case "game_started_v1" ⇒ GameStarted()
+    case "card_played_v1"  ⇒ CardPlayed()
+    case x                 ⇒ throw new NotSerializableException(x)
   }
 }

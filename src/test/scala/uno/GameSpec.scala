@@ -9,19 +9,19 @@ import utest._
 
 object GameSpec extends TestSuite {
   override def tests = Tests {
-    'test1 - {
+    'integrationTest - {
       implicit val system: ActorSystem = ActorSystem("main", ConfigFactory.defaultApplication())
-      val game = new Game("id")
+      val game = new Game(UUID.randomUUID().toString)
       for {
-        a ← game.send(CreateGame(Player()))
-        b ← game.send(JoinGame(Player()))
-        c ← game.send(JoinGame(Player()))
+        a ← game.send(CreateGame(Player("John")))
+        b ← game.send(JoinGame(Player("Alice")))
+        c ← game.send(JoinGame(Player("Bob")))
         d ← game.send(StartGame())
         _ ← system.terminate()
       } yield assert(
-        a == Right(GameCreated() :: GameJoined(Player()) :: Nil),
-        b == Right(GameJoined(Player()) :: Nil),
-        c == Right(GameJoined(Player()) :: Nil),
+        a == Right(GameCreated() :: GameJoined(Player("John")) :: Nil),
+        b == Right(GameJoined(Player("Alice")) :: Nil),
+        c == Right(GameJoined(Player("Bob")) :: Nil),
         d == Right(GameStarted() :: Nil)
       )
     }

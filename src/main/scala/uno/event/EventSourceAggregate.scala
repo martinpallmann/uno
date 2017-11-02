@@ -8,7 +8,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 abstract class EventSourceAggregate[STATE, COMMAND, EVENT <: AnyRef, ERROR]
-(implicit system: ActorSystem, ect: ClassTag[EVENT]) {
+(implicit system: ActorSystem, ect: ClassTag[EVENT], sct: ClassTag[STATE]) {
 
   implicit val timeout: Timeout = Timeout(10.seconds)
 

@@ -7,14 +7,12 @@ import akka.persistence.{PersistentActor, SnapshotOffer}
 class EventSourceActor[STATE, COMMAND, EVENT <: AnyRef, ERROR](
     override val persistenceId: String,
     es: EventSource[STATE, COMMAND, EVENT, ERROR]
-)(implicit ect: ClassTag[EVENT]) extends PersistentActor {
+)(implicit ect: ClassTag[EVENT], sct: ClassTag[STATE]) extends PersistentActor {
 
   private var state: STATE = es.startState
 
-  private def evolveState(event: EVENT): Unit = {
-    println(s"evolve state $state - $event")
+  private def evolveState(event: EVENT): Unit =
     state = es.evolve(state, event)
-  }
 
   private val snapShotInterval = 1000
 
@@ -26,7 +24,7 @@ class EventSourceActor[STATE, COMMAND, EVENT <: AnyRef, ERROR](
           events.foreach(
             event ⇒ {
               persist(event)(evolveState)
-//              context.system.eventStream.publish(event)
+              context.system.eventStream.publish(event)
               if (lastSequenceNr % snapShotInterval == 0 && lastSequenceNr != 0) saveSnapshot(state)
             }
           )
@@ -38,22 +36,21 @@ class EventSourceActor[STATE, COMMAND, EVENT <: AnyRef, ERROR](
 
   final override def receiveRecover: Receive = {
     case event: EVENT ⇒ evolveState(event)
-    case SnapshotOffer(_, snapshot) ⇒ state = snapshot.asInstanceOf[STATE] // TODO asInstanceOf
+    case SnapshotOffer(_, snapshot: STATE) ⇒ state = snapshot
   }
-
-
 }
 
 object EventSourceActor {
   def props[STATE, COMMAND, EVENT <: AnyRef, ERROR](
       persistenceId: String,
       eventSource: EventSource[STATE, COMMAND, EVENT, ERROR],
-      ect: ClassTag[EVENT]): Props =
-    Props(new EventSourceActor[STATE, COMMAND, EVENT, ERROR](persistenceId, eventSource)(ect))
+      ect: ClassTag[EVENT],
+      sct: ClassTag[STATE]): Props =
+    Props(new EventSourceActor[STATE, COMMAND, EVENT, ERROR](persistenceId, eventSource)(ect, sct))
 
   def apply[STATE, COMMAND, EVENT <: AnyRef, ERROR](
       persistenceId: String,
       eventSource: EventSource[STATE, COMMAND, EVENT, ERROR]
-  )(implicit system: ActorSystem, ect: ClassTag[EVENT]): ActorRef =
-    system.actorOf(props(persistenceId, eventSource, ect))
+  )(implicit system: ActorSystem, ect: ClassTag[EVENT], sct: ClassTag[STATE]): ActorRef =
+    system.actorOf(props(persistenceId, eventSource, ect, sct))
 }
