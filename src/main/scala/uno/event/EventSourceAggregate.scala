@@ -8,7 +8,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 abstract class EventSourceAggregate[STATE, COMMAND, EVENT <: AnyRef, ERROR]
-(implicit system: ActorSystem, ect: ClassTag[EVENT], sct: ClassTag[STATE]) {
+(implicit system: ActorSystem, ect: ClassTag[EVENT], sct: ClassTag[STATE], cct: ClassTag[COMMAND]) {
 
   implicit val timeout: Timeout = Timeout(10.seconds)
 
@@ -19,5 +19,5 @@ abstract class EventSourceAggregate[STATE, COMMAND, EVENT <: AnyRef, ERROR]
   private lazy val actor = EventSourceActor(persistenceId, eventSource)
 
   def send(command: COMMAND): Future[Either[ERROR, List[EVENT]]] =
-    (actor ? eventSource.Cmd(command)).mapTo[Either[ERROR, List[EVENT]]]
+    (actor ? command).mapTo[Either[ERROR, List[EVENT]]]
 }
