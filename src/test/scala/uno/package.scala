@@ -1,4 +1,5 @@
 import uno.game.{Command, Error, Event, State}
+import Predef.identity
 
 package object uno {
 
@@ -9,7 +10,7 @@ package object uno {
       val state = xs.foldLeft(startState) {
         (acc, elem) ⇒ Game.evolve(acc, elem)
       }
-      Game.decide(state, command)
+      Game.decide(identity)(state, command)
     }
   }
 }

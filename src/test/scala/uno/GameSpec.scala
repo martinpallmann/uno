@@ -1,11 +1,16 @@
 package uno
 
 import java.util.UUID
+
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 import uno.game._
+
 import scala.concurrent.ExecutionContext.Implicits._
 import utest._
+
+import Predef.genericWrapArray
+import Predef.identity
 
 object GameSpec extends TestSuite {
 
@@ -41,7 +46,7 @@ object GameSpec extends TestSuite {
     'waitingToStart - {
 
       implicit val startState: State =
-        WaitingToStart(Players(Player("John") :: Player("Alice") :: Player("Bob") :: Nil))
+        WaitingToStart(Players(Player("John") :: Player("Alice") :: Player("Bob") :: Nil, 0))
 
       * - {
         JoinGame(Player("Jane")) ~~>
@@ -52,14 +57,14 @@ object GameSpec extends TestSuite {
       * - {
         StartGame() ~~>
             () ==>
-            ok(GameStarted())
+            ok(GameStarted(Deck()))
       }
     }
 
     'playing - {
 
       implicit val startState: State =
-        Playing(Players(Player("John") :: Player("Alice") :: Player("Bob") :: Nil))
+        Playing(Players(Player("John") :: Player("Alice") :: Player("Bob") :: Nil, 0), Deck())
 
       * - {
         JoinGame(Player("Jane")) ~~>
@@ -70,7 +75,8 @@ object GameSpec extends TestSuite {
 
     'integrationTest - {
       implicit val system: ActorSystem = ActorSystem("main", ConfigFactory.defaultApplication())
-      val game = new Game(UUID.randomUUID().toString)
+      val game = new Game(UUID.randomUUID().toString, identity)
+      val deck = Deck()
       for {
         a ← game.send(CreateGame(Player("John")))
         b ← game.send(JoinGame(Player("Alice")))
@@ -81,7 +87,7 @@ object GameSpec extends TestSuite {
         a == Right(GameCreated() :: GameJoined(Player("John")) :: Nil),
         b == Right(GameJoined(Player("Alice")) :: Nil),
         c == Right(GameJoined(Player("Bob")) :: Nil),
-        d == Right(GameStarted() :: Nil)
+        d == Right(GameStarted(deck) :: Nil)
       )
     }
   }

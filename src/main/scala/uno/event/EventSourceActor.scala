@@ -11,6 +11,7 @@ class EventSourceActor[STATE, COMMAND, EVENT <: AnyRef, ERROR](
     evolve: (STATE, EVENT) ⇒ STATE
 )(implicit ect: ClassTag[EVENT], sct: ClassTag[STATE], cct: ClassTag[COMMAND]) extends PersistentActor {
 
+  @SuppressWarnings(Array("org.wartremover.warts.Var"))
   private var state: STATE = startState
 
   private def evolveState(event: EVENT): Unit =
@@ -18,6 +19,7 @@ class EventSourceActor[STATE, COMMAND, EVENT <: AnyRef, ERROR](
 
   private val snapShotInterval = 1000
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   final override def receiveCommand: Receive = {
     case c: COMMAND ⇒
       val answerTo = sender()
@@ -36,6 +38,7 @@ class EventSourceActor[STATE, COMMAND, EVENT <: AnyRef, ERROR](
       }
   }
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   final override def receiveRecover: Receive = {
     case event: EVENT ⇒ evolveState(event)
     case SnapshotOffer(_, snapshot: STATE) ⇒ state = snapshot
