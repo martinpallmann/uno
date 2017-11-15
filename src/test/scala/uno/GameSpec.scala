@@ -46,7 +46,7 @@ object GameSpec extends TestSuite {
     'waitingToStart - {
 
       implicit val startState: State =
-        WaitingToStart(Players(Player("John") :: Player("Alice") :: Player("Bob") :: Nil, 0))
+        WaitingToStart(Players(Player("John") :: Player("Alice") :: Player("Bob") :: Nil, 0, Players.Forward))
 
       * - {
         JoinGame(Player("Jane")) ~~>
@@ -64,7 +64,7 @@ object GameSpec extends TestSuite {
     'playing - {
 
       implicit val startState: State =
-        Playing(Players(Player("John") :: Player("Alice") :: Player("Bob") :: Nil, 0), Deck())
+        Playing(Players(Player("John") :: Player("Alice") :: Player("Bob") :: Nil, 0, Players.Forward), Deck(), Card.Wild)
 
       * - {
         JoinGame(Player("Jane")) ~~>
